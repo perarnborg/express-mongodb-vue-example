@@ -11,7 +11,8 @@ router.get('/:messageId', async (req, res) => {
   const message = await req.context.models.Message.findById(
     req.params.messageId
   )
-  return res.send(message)
+  const sender = await req.context.models.User.findById(message?.user)
+  return res.send({ ...message, sender })
 })
 
 router.post('/', async (req, res) => {

@@ -1,4 +1,4 @@
-import { get } from './http-service'
+import { get, post } from './http-service'
 
 const respond = response => {
   if (response.error) {
@@ -26,11 +26,26 @@ export const getCurrentUser = async () => {
   return respond(response)
 }
 
-export const getMessages = async userId => {
+export const getMessages = async () => {
   const url = `messages`
   const response = await get(apiUrl(url), {
     ...tokenHeader(),
     ...jsonHeader()
   })
+  return respond(response)
+}
+
+export const createMessage = async text => {
+  const url = `messages`
+  const response = await post(
+    apiUrl(url),
+    {
+      ...tokenHeader(),
+      ...jsonHeader()
+    },
+    {
+      text
+    }
+  )
   return respond(response)
 }

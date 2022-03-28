@@ -7,6 +7,7 @@ import path from 'path'
 
 import models, { connectDb } from './models'
 import routes from './routes'
+import createSignedInUserMiddleware from './middleware/signed-in-user'
 
 const app = express()
 
@@ -23,13 +24,7 @@ app.use(express.urlencoded({ extended: true }))
 
 // Custom Middleware
 
-app.use(async (req, res, next) => {
-  req.context = {
-    models,
-    me: await models.User.findByLogin('janedoe') // TODO: get this from Bearer Token
-  }
-  next()
-})
+app.use(createSignedInUserMiddleware(models))
 
 // * Routes * //
 
@@ -45,7 +40,7 @@ app.get('*', function (request, response) {
 
 // * Start * //
 
-const eraseDatabaseOnSync = true
+const eraseDatabaseOnSync = false // NOTE: Set to true if you want to flush db on startup
 
 connectDb().then(async () => {
   if (eraseDatabaseOnSync) {
@@ -53,45 +48,9 @@ connectDb().then(async () => {
       models.User.deleteMany({}),
       models.Message.deleteMany({})
     ])
-
-    createUsersWithMessages()
   }
 
   app.listen(process.env.PORT, () =>
     console.log(`Example app listening on port ${process.env.PORT}!`)
   )
 })
-
-// * Database Seeding * //
-
-const createUsersWithMessages = async () => {
-  const user1 = new models.User({
-    username: 'janedoe'
-  })
-
-  const user2 = new models.User({
-    username: 'johndoe'
-  })
-
-  const message1 = new models.Message({
-    text: 'Message 1',
-    user: user1.id
-  })
-
-  const message2 = new models.Message({
-    text: 'Message 2',
-    user: user2.id
-  })
-
-  const message3 = new models.Message({
-    text: 'Message 3',
-    user: user2.id
-  })
-
-  await message1.save()
-  await message2.save()
-  await message3.save()
-
-  await user1.save()
-  await user2.save()
-}
